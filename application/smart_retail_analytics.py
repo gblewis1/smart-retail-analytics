@@ -206,7 +206,6 @@ def parse_conf_file():
     global CONFIG_FILE
     global check_feed_type
 
-    print("in parse_conf_file()\n")
     video_caps = []
 
     assert os.path.isfile(CONFIG_FILE), "{} file doesn't exist".format(CONFIG_FILE)
@@ -246,13 +245,6 @@ def parse_conf_file():
             print("Feed type not specified for ", parse_video)
 
     for video_cap in video_caps:
-        print("trying to evaluate video_cap.vc.isOpened()")
-        print(str(video_cap))
-        print(str(video_cap.vc))
-        print(str(video_cap.vc.isOpened()))
-        if not video_cap.vc.isOpened():
-            print("{} is not initialized".format(video_cap.input_name))
-        print(str(video_cap.input_name))
         assert video_cap.vc.isOpened(), "{} is not initialized".format(video_cap.input_name)
         video_cap.input_width = video_cap.vc.get(3)
         video_cap.input_height = video_cap.vc.get(4)
@@ -769,8 +761,6 @@ def create_database():
     """
     global db_client
 
-    print("create_database()\n")
-
     proxy = {"http": "http://{}:{}".format(IPADDRESS, PORT)}
     db_client = InfluxDBClient(host=IPADDRESS, port=PORT, proxies=proxy, database=DATABASE_NAME)
     db_client.create_database(DATABASE_NAME)
@@ -786,19 +776,14 @@ def retail_analytics():
     global tracked_person
     global db_client
 
-    print("in retail_analytics()\n")
     log.basicConfig(format="[ %(levelname)s ] %(message)s", level=log.INFO, stream=sys.stdout)
     video_caps = parse_conf_file()
-    print("before asserting input source\n")
     assert len(video_caps) != 0, "No input source given in Configuration file"
-    print("after asserting input source\n")
     args = args_parser()
     check_args(args)
     load_models(video_caps, args)
     labels = get_used_labels(video_caps, args)
-    print(" before create_database\n")
     create_database()
-    print("after create_database\n")
     min_fps = min([i.vc.get(cv2.CAP_PROP_FPS) for i in video_caps])
     no_more_data = [False] * len(video_caps)
     frames = [None] * len(video_caps)
@@ -819,10 +804,8 @@ def retail_analytics():
     det_time = 0
     input_blob = ["data", "im_info"]
     cur_request_id = 0
-    print("before main loop in retail_analytics()\n")
     # Main loop for object detection in multiple video streams
     while True:
-        print("iteration of main loop in retail_analytics()\n")
         for idx, video_cap in enumerate(video_caps):
             vfps = int(round(video_cap.vc.get(cv2.CAP_PROP_FPS)))
             for i in range(0, int(round(vfps / min_fps))):
